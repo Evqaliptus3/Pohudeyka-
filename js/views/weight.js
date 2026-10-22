@@ -46,7 +46,7 @@ export function renderWeight(root, rerender) {
         const prev = arr[i + 1];
         const diff = prev ? w.kg - prev.kg : 0;
         return h('div', { class: 'row' },
-          h('div', { class: 'row-main' }, h('b', null, `${fmt1(w.kg)} кг`, w.waist ? h('small', null, ` · талия ${fmt1(w.waist)} см`) : null), h('small', null, parseKey(w.date).toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long' }))),
+          h('div', { class: 'row-main' }, h('b', null, `${fmt1(w.kg)} кг`, w.src === 'health' ? h('small', null, ' · ❤️ Health') : null, w.waist ? h('small', null, ` · талия ${fmt1(w.waist)} см`) : null), h('small', null, parseKey(w.date).toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long' }))),
           prev && h('span', { class: diff <= 0 ? 'ok' : 'over' }, `${diff > 0 ? '+' : ''}${fmt1(diff)}`),
           h('button', { class: 'icon-btn', onclick: () => confirm('Удалить запись?') && update((x) => (x.weights = x.weights.filter((y) => y.date !== w.date))) }, '✕'),
         );

@@ -7,6 +7,7 @@ import { quoteOfDay } from '../motivation.js';
 import { SPORT_TIPS } from '../foods.js';
 import { startWorkout } from './train.js';
 import { startHoops } from './hoops.js';
+import { openHealth, healthSummary } from './health.js';
 
 export function renderToday(root) {
   const s = getState();
@@ -93,6 +94,20 @@ export function renderToday(root) {
       bar(ws.pct, 100, 'goal'),
       !weighedToday && h('button', { class: 'btn primary block', onclick: () => openAddWeight(key) }, '⚖️ Взвеситься'),
     ),
+
+    // Apple Health
+    (() => {
+      const hs = healthSummary(s, key);
+      const stale = !hs.lastSync || Date.now() - hs.lastSync > 12 * 3600 * 1000;
+      return h('button', { class: 'card health-card', onclick: openHealth },
+        h('span', { class: 'plan-icon' }, '❤️'),
+        h('div', { class: 'row-main' },
+          h('b', null, hs.steps != null ? `👟 ${fmt(hs.steps)} шагов${hs.active != null ? ` · 🔥 ${fmt(hs.active)} ккал` : ''}` : 'Apple Health'),
+          h('small', null, hs.lastSync ? (stale ? 'Пора синхронизировать' : 'Данные из Health') : 'Подключить вес, шаги и активность'),
+        ),
+        h('span', { class: 'chev' }, '›'),
+      );
+    })(),
 
     // Вода
     h('div', { class: 'card water' },

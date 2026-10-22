@@ -66,6 +66,7 @@ export const ACHIEVEMENTS = [
   { id: 'hoops1', icon: '🏀', name: 'Один на один с кольцом', desc: 'Первая соло-тренировка с мячом', test: (s) => hoopsTotals(s).sessions >= 1 },
   { id: 'made100', icon: '🎯', name: '100 попаданий', desc: 'Забил 100 мячей на соло-тренировках', test: (s) => hoopsTotals(s).made >= 100 },
   { id: 'made1000', icon: '👑', name: '1000 попаданий', desc: 'Тысяча мячей в кольцо', test: (s) => hoopsTotals(s).made >= 1000 },
+  { id: 'steps10k', icon: '👟', name: '10 000 шагов', desc: 'День с 10 000 шагов по данным Health', test: (s) => Object.values(s.health?.steps || {}).some((v) => v >= 10000) },
   { id: 'sport10', icon: '🏀', name: '10 игр', desc: 'Записал 10 активностей', test: (s) => countSports(s) >= 10 },
   { id: 'hours20', icon: '⏱', name: '20 часов спорта', desc: 'Наиграл 20 часов', test: (s) => sportHours(s) >= 20 },
   { id: 'active50', icon: '⚡', name: '50 активных дней', desc: 'Двигался 50 разных дней', test: (s) => activeDaysTotal(s) >= 50 },

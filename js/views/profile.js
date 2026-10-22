@@ -5,6 +5,7 @@ import { ACHIEVEMENTS } from '../motivation.js';
 import { profileForm, placeStrength } from './onboarding.js';
 import { openApiKey } from '../actions.js';
 import { getApiKey } from '../photo.js';
+import { openHealth } from './health.js';
 
 export function renderProfile(root) {
   const s = getState();
@@ -37,6 +38,11 @@ export function renderProfile(root) {
       h('h3', null, 'Калории со спорта'),
       h('p', { class: 'muted' }, 'Какую часть сожжённого на играх добавлять к норме еды. Формулы и часы обычно завышают расход, поэтому 50–70% — безопасно.'),
       segmented([0, 50, 60, 75, 100].map((v) => ({ value: v, label: v + '%' })), p.eatBack ?? 60, (v) => update((x) => (x.profile.eatBack = v))),
+    ),
+    h('div', { class: 'card' },
+      h('h3', null, '❤️ Apple Health'),
+      h('p', { class: 'muted' }, 'Вес с умных весов, шаги и активная энергия с часов — в приложение. Калории и вес из приложения — в Health. Работает через приложение «Команды».'),
+      h('button', { class: 'btn ghost block', onclick: openHealth }, 'Открыть'),
     ),
     h('div', { class: 'card' },
       h('h3', null, '📷 Распознавание еды по фото'),
