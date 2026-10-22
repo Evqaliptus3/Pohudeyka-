@@ -1,7 +1,7 @@
 import { getState, dateKey, addDays, parseKey } from '../store.js';
 import { h, bar, fmt, fmt1 } from '../ui.js';
 import { targets, dayTotals } from '../calc.js';
-import { openAddFood, openEditFoodItem, openMealIdeas, MEAL_NAMES } from '../actions.js';
+import { openAddFood, openEditFoodItem, openMealIdeas, openPhotoFood, MEAL_NAMES } from '../actions.js';
 import { SPORT_TIPS } from '../foods.js';
 
 let viewKey = null;
@@ -48,10 +48,13 @@ export function renderFood(root, rerender) {
       return h('div', { class: 'card meal' },
         h('div', { class: 'card-head' }, h('h3', null, name), h('small', null, kc ? `${fmt(kc)} ккал` : '')),
         list.map((i) => h('button', { class: 'row', onclick: () => openEditFoodItem(key, i) },
-          h('div', { class: 'row-main' }, h('b', null, i.name), h('small', null, `${i.grams ? i.grams + ' г · ' : ''}Б ${fmt1(i.p)} Ж ${fmt1(i.f)} У ${fmt1(i.c)}`)),
+          h('div', { class: 'row-main' }, h('b', null, (i.photo ? '📷 ' : '') + i.name), h('small', null, `${i.grams ? i.grams + ' г · ' : ''}Б ${fmt1(i.p)} Ж ${fmt1(i.f)} У ${fmt1(i.c)}`)),
           h('span', { class: 'kc' }, fmt(i.kcal)),
         )),
-        h('button', { class: 'btn ghost small block', onclick: () => openAddFood(key, meal) }, '＋ Добавить'),
+        h('div', { class: 'btn-row tight' },
+          h('button', { class: 'btn ghost small', onclick: () => openAddFood(key, meal) }, '＋ Добавить'),
+          h('button', { class: 'btn ghost small', onclick: () => openPhotoFood(key, meal) }, '📷 Фото'),
+        ),
       );
     }),
     h('div', { class: 'card' },

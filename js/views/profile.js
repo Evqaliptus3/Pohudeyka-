@@ -3,6 +3,8 @@ import { h, sheet, toast, segmented, fmt } from '../ui.js';
 import { targets, bmr, currentWeight, age } from '../calc.js';
 import { ACHIEVEMENTS } from '../motivation.js';
 import { profileForm, placeStrength } from './onboarding.js';
+import { openApiKey } from '../actions.js';
+import { getApiKey } from '../photo.js';
 
 export function renderProfile(root) {
   const s = getState();
@@ -35,6 +37,11 @@ export function renderProfile(root) {
       h('h3', null, 'Калории со спорта'),
       h('p', { class: 'muted' }, 'Какую часть сожжённого на играх добавлять к норме еды. Формулы и часы обычно завышают расход, поэтому 50–70% — безопасно.'),
       segmented([0, 50, 60, 75, 100].map((v) => ({ value: v, label: v + '%' })), p.eatBack ?? 60, (v) => update((x) => (x.profile.eatBack = v))),
+    ),
+    h('div', { class: 'card' },
+      h('h3', null, '📷 Распознавание еды по фото'),
+      h('p', { class: 'muted' }, getApiKey() ? 'Ключ подключён ✓ Фото анализирует Claude, одно фото стоит примерно 2–3 цента.' : 'Сфотографируй тарелку — ИИ определит продукты, граммы и калории. Нужен ключ Claude API, это один раз.'),
+      h('button', { class: 'btn ghost block', onclick: () => openApiKey(() => location.reload()) }, getApiKey() ? 'Изменить ключ' : 'Подключить'),
     ),
     h('div', { class: 'card' },
       h('h3', null, '📲 Установка на iPhone'),

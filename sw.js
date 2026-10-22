@@ -1,5 +1,5 @@
 // Офлайн-кэш. При изменении файлов увеличивай версию.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = 'pohudeyka-' + VERSION;
 const FILES = [
   './',
@@ -14,6 +14,8 @@ const FILES = [
   './js/motivation.js',
   './js/ui.js',
   './js/actions.js',
+  './js/photo.js',
+  './js/vendor/anthropic-sdk.js',
   './js/views/onboarding.js',
   './js/views/today.js',
   './js/views/food.js',

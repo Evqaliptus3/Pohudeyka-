@@ -3,6 +3,7 @@ import { getState, update, uid, dateKey } from './store.js';
 import { h, sheet, toast, fmt, fmt1, num, numInput, segmented, field } from './ui.js';
 import { SPORTS, INTENSITY, activityKcal, currentWeight } from './calc.js';
 import { searchFoods, searchOnline, portion, MEALS, mealItems, mealTotals } from './foods.js';
+import { getApiKey, setApiKey, prepareImage, analyzeFood } from './photo.js';
 
 export const MEAL_NAMES = { breakfast: 'Завтрак', lunch: 'Обед', dinner: 'Ужин', snack: 'Перекус' };
 
@@ -96,6 +97,7 @@ export function openAddFood(key = dateKey(), meal = defaultMeal()) {
       'div',
       null,
       mealPicker(curMeal, (v) => (curMeal = v)),
+      h('button', { class: 'btn primary block', onclick: () => openPhotoFood(key, curMeal, close) }, '📷 Фото еды — посчитать калории'),
       search,
       h('div', { class: 'btn-row' },
         h('button', { class: 'btn ghost small', onclick: () => openMealIdeas(key, curMeal, close) }, '🍱 Блюда'),
@@ -356,4 +358,156 @@ export function openAddActivity(key = dateKey(), type = 'basketball') {
 
 export function removeActivity(key, id) {
   update((s) => (s.activities[key] = (s.activities[key] || []).filter((a) => a.id !== id)));
+}
+
+// ---------- Фото еды ----------
+
+export function openPhotoFood(key = dateKey(), meal = defaultMeal(), closeParent) {
+  if (!getApiKey()) return openApiKey(() => openPhotoFood(key, meal, closeParent));
+  // input.click() должен вызываться прямо из нажатия, иначе iOS не откроет камеру
+  const input = h('input', { type: 'file', accept: 'image/*' });
+  input.addEventListener('change', () => {
+    const file = input.files[0];
+    if (file) photoSheet(file, key, meal, closeParent);
+  });
+  input.click();
+}
+
+function photoSheet(file, key, meal, closeParent) {
+  sheet('Фото еды', (close) => {
+    let curMeal = meal;
+    let image = null;
+    let items = [];
+    const preview = h('div', { class: 'photo-preview' }, h('span', { class: 'muted' }, 'Загружаю фото…'));
+    const comment = h('input', { type: 'text', placeholder: 'Подсказка: «жарено на масле», «соус отдельно», «половина порции»' });
+    const result = h('div');
+    const go = h('button', { class: 'btn primary block', disabled: true, onclick: run }, '✨ Распознать');
+
+    prepareImage(file)
+      .then((img) => {
+        image = img;
+        preview.innerHTML = '';
+        preview.append(h('img', { src: img.dataUrl, alt: 'Фото еды' }));
+        go.disabled = false;
+      })
+      .catch((e) => {
+        preview.innerHTML = '';
+        preview.append(h('p', { class: 'over' }, e.message));
+      });
+
+    async function run() {
+      go.disabled = true;
+      go.textContent = 'Смотрю на тарелку… (10–30 сек)';
+      result.innerHTML = '';
+      result.append(h('div', { class: 'loader' }));
+      try {
+        const data = await analyzeFood(image.base64, comment.value.trim());
+        items = data.items.map((i) => ({ ...i, grams: Math.round(i.grams), on: true }));
+        renderResult(data);
+        go.textContent = '🔄 Распознать заново';
+      } catch (e) {
+        result.innerHTML = '';
+        result.append(h('p', { class: 'tip over-tip' }, '⚠️ ' + e.message));
+        go.textContent = '✨ Попробовать ещё раз';
+      }
+      go.disabled = false;
+    }
+
+    function calc(i) {
+      return portion({ name: i.name, kcal: i.kcal_per_100g, p: i.protein_per_100g, f: i.fat_per_100g, c: i.carbs_per_100g }, i.grams || 0);
+    }
+
+    function renderResult(data) {
+      result.innerHTML = '';
+      if (!items.length) {
+        result.append(h('p', { class: 'tip' }, data.note || 'Еды на фото не нашлось.'));
+        return;
+      }
+      const conf = { high: ['уверенно', 'ok'], medium: ['примерно', ''], low: ['очень примерно', 'over'] }[data.confidence] || ['', ''];
+      const totalBox = h('div', { class: 'preview' });
+      const addBtn = h('button', { class: 'btn primary block' });
+      const updTotal = () => {
+        const t = items.filter((i) => i.on).map(calc).reduce((a, p) => ({ kcal: a.kcal + p.kcal, p: a.p + p.p, f: a.f + p.f, c: a.c + p.c }), { kcal: 0, p: 0, f: 0, c: 0 });
+        totalBox.innerHTML = '';
+        totalBox.append(h('b', null, `${fmt(t.kcal)} ккал`), h('span', null, `Б ${fmt1(t.p)} · Ж ${fmt1(t.f)} · У ${fmt1(t.c)}`));
+        const n = items.filter((i) => i.on).length;
+        addBtn.textContent = n ? `Добавить в «${MEAL_NAMES[curMeal]}» (${n})` : 'Ничего не выбрано';
+        addBtn.disabled = !n;
+      };
+      const rows = items.map((i) => {
+        const kc = h('span', { class: 'kc' });
+        const updRow = () => (kc.textContent = fmt(calc(i).kcal));
+        const g = numInput({ value: i.grams, inputmode: 'numeric', class: 'grams-input', oninput: (e) => {
+          i.grams = num(e.target.value) || 0;
+          updRow();
+          updTotal();
+        } });
+        const row = h('div', { class: 'photo-item' + (i.on ? '' : ' off') },
+          h('button', { class: 'check small-check' + (i.on ? ' on' : ''), onclick: (e) => {
+            i.on = !i.on;
+            e.currentTarget.classList.toggle('on', i.on);
+            row.classList.toggle('off', !i.on);
+            updTotal();
+          } }, '✓'),
+          h('div', { class: 'row-main' }, h('b', null, i.name), h('small', null, `${fmt(i.kcal_per_100g)} ккал / 100 г`)),
+          g,
+          h('small', { class: 'muted' }, 'г'),
+          kc,
+        );
+        updRow();
+        return row;
+      });
+      updTotal();
+      addBtn.onclick = () => {
+        const chosen = items.filter((i) => i.on && i.grams > 0);
+        addItems(key, curMeal, chosen.map((i) => ({ ...calc(i), base: { kcal: i.kcal_per_100g, p: i.protein_per_100g, f: i.fat_per_100g, c: i.carbs_per_100g }, photo: true })));
+        const kcal = chosen.reduce((a, i) => a + calc(i).kcal, 0);
+        toast(`📷 + ${fmt(kcal)} ккал · ${MEAL_NAMES[curMeal]}`);
+        close();
+        closeParent && closeParent();
+      };
+      result.append(
+        h('div', { class: 'card-head', style: { marginTop: '18px' } }, h('h3', null, 'На тарелке'), h('small', { class: conf[1] }, conf[0])),
+        h('p', { class: 'muted small' }, 'Поправь граммы, если знаешь точнее. Галочкой можно убрать лишнее.'),
+        ...rows,
+        totalBox,
+        data.note ? h('p', { class: 'tip' }, '💬 ' + data.note) : '',
+        h('div', { class: 'field' }, h('span', null, 'Приём пищи'), mealPicker(curMeal, (v) => {
+          curMeal = v;
+          updTotal();
+        })),
+        addBtn,
+      );
+    }
+
+    return h('div', null, preview, field('Комментарий (необязательно)', comment), go, result);
+  });
+}
+
+export function openApiKey(onSaved) {
+  sheet('Ключ для фото-анализа', (close) => {
+    const input = h('input', { type: 'text', placeholder: 'sk-ant-…', autocomplete: 'off', autocapitalize: 'off', spellcheck: false, value: getApiKey() });
+    return h('div', null,
+      h('p', null, 'Фото распознаёт ИИ Claude. Для этого нужен твой личный ключ API — один раз.'),
+      h('ol', { class: 'small' },
+        h('li', null, 'Открой ', h('a', { href: 'https://console.anthropic.com/settings/keys', target: '_blank', rel: 'noopener' }, 'console.anthropic.com'), ' и войди (можно через Google).'),
+        h('li', null, 'Billing → пополни баланс на $5 — хватит примерно на 150–250 фото.'),
+        h('li', null, 'API Keys → Create Key → скопируй ключ и вставь сюда.'),
+      ),
+      field('Ключ API', input, 'Хранится только на этом телефоне и не попадает в резервную копию.'),
+      h('button', { class: 'btn primary block', onclick: () => {
+        const v = input.value.trim();
+        if (!v.startsWith('sk-ant-')) return toast('Ключ должен начинаться с sk-ant-');
+        setApiKey(v);
+        toast('Ключ сохранён ✓');
+        close();
+        onSaved && onSaved();
+      } }, 'Сохранить'),
+      getApiKey() && h('button', { class: 'btn danger block', onclick: () => {
+        setApiKey('');
+        toast('Ключ удалён');
+        close();
+      } }, 'Удалить ключ'),
+    );
+  });
 }

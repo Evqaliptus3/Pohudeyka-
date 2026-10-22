@@ -1,7 +1,7 @@
 import { getState, dateKey, update } from '../store.js';
 import { h, ring, bar, fmt, fmt1 } from '../ui.js';
 import { targets, dayTotals, SPORTS, weightStats, foodStreak, weekActiveDays, INTENSITY } from '../calc.js';
-import { openAddFood, openAddWeight, openAddActivity, removeActivity, openMealIdeas } from '../actions.js';
+import { openAddFood, openAddWeight, openAddActivity, removeActivity, openMealIdeas, openPhotoFood } from '../actions.js';
 import { nextProgramDay, DAY_NAMES, PREGAME } from '../workouts.js';
 import { quoteOfDay } from '../motivation.js';
 import { SPORT_TIPS } from '../foods.js';
@@ -44,7 +44,8 @@ export function renderToday(root) {
       ),
       h('div', { class: 'btn-row' },
         h('button', { class: 'btn primary', onclick: () => openAddFood(key) }, '＋ Еда'),
-        h('button', { class: 'btn ghost', onclick: () => openMealIdeas(key, undefined, null, left) }, '🍱 Что съесть?'),
+        h('button', { class: 'btn primary', onclick: () => openPhotoFood(key) }, '📷 Фото'),
+        h('button', { class: 'btn ghost', onclick: () => openMealIdeas(key, undefined, null, left) }, '🍱 Идеи'),
       ),
     ),
 
