@@ -119,3 +119,30 @@ export function segmented(options, value, onChange) {
 export function field(label, input, hint) {
   return h('label', { class: 'field' }, h('span', null, label), input, hint && h('small', null, hint));
 }
+
+// Звук таймера. iOS разрешает звук только после нажатия, поэтому unlockAudio вызываем из обработчика клика.
+let audioCtx = null;
+
+export function unlockAudio() {
+  if (audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  } catch {}
+}
+
+export function beep(times = 3) {
+  try {
+    if (!audioCtx) return;
+    for (let i = 0; i < times; i++) {
+      const t = i * 0.25;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.25, audioCtx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + t + 0.2);
+      o.connect(g).connect(audioCtx.destination);
+      o.start(audioCtx.currentTime + t);
+      o.stop(audioCtx.currentTime + t + 0.2);
+    }
+  } catch {}
+}

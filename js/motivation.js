@@ -29,6 +29,11 @@ function countWorkouts(s) {
   return Object.values(s.workouts).flat().filter((w) => w.finished).length;
 }
 
+function hoopsTotals(s) {
+  const runs = Object.values(s.hoops || {}).flat().filter((x) => x.finished);
+  return { sessions: runs.length, made: runs.reduce((a, r) => a + r.steps.reduce((b, x) => b + x.made, 0), 0) };
+}
+
 function countSports(s) {
   return Object.values(s.activities).flat().length;
 }
@@ -58,6 +63,9 @@ export const ACHIEVEMENTS = [
   { id: 'gym1', icon: '🏋️', name: 'Первая силовая', desc: 'Завершил тренировку', test: (s) => countWorkouts(s) >= 1 },
   { id: 'gym10', icon: '💪', name: '10 силовых', desc: 'Завершил 10 тренировок', test: (s) => countWorkouts(s) >= 10 },
   { id: 'gym30', icon: '🦾', name: '30 силовых', desc: 'Железная привычка', test: (s) => countWorkouts(s) >= 30 },
+  { id: 'hoops1', icon: '🏀', name: 'Один на один с кольцом', desc: 'Первая соло-тренировка с мячом', test: (s) => hoopsTotals(s).sessions >= 1 },
+  { id: 'made100', icon: '🎯', name: '100 попаданий', desc: 'Забил 100 мячей на соло-тренировках', test: (s) => hoopsTotals(s).made >= 100 },
+  { id: 'made1000', icon: '👑', name: '1000 попаданий', desc: 'Тысяча мячей в кольцо', test: (s) => hoopsTotals(s).made >= 1000 },
   { id: 'sport10', icon: '🏀', name: '10 игр', desc: 'Записал 10 активностей', test: (s) => countSports(s) >= 10 },
   { id: 'hours20', icon: '⏱', name: '20 часов спорта', desc: 'Наиграл 20 часов', test: (s) => sportHours(s) >= 20 },
   { id: 'active50', icon: '⚡', name: '50 активных дней', desc: 'Двигался 50 разных дней', test: (s) => activeDaysTotal(s) >= 50 },

@@ -139,3 +139,41 @@ function humanError(Anthropic, e) {
   if (e instanceof Anthropic.APIError) return new Error('Ошибка сервиса (' + (e.status ?? '?') + '). Попробуй позже.');
   return e;
 }
+
+// ---------- Через чат Claude по подписке ----------
+
+export const CHAT_PROMPT = `${SYSTEM}
+
+Пользователь прикрепил фото еды. Ответь ТОЛЬКО одним блоком JSON без пояснений до и после, строго в таком формате:
+{"items":[{"name":"Гречка варёная","grams":180,"kcal_per_100g":110,"protein_per_100g":4,"fat_per_100g":1,"carbs_per_100g":21}],"confidence":"medium","note":"что учёл и в чём не уверен"}
+confidence — одно из: high, medium, low. Числа — без единиц измерения.`;
+
+// Ответ из чата копируют руками: вокруг JSON может быть текст, ```-блоки, «умные» кавычки
+export function parseChatAnswer(text) {
+  const t = String(text || '').replace(/[“”«»]/g, '"').trim();
+  const a = t.indexOf('{');
+  const b = t.lastIndexOf('}');
+  if (a < 0 || b <= a) throw new Error('В ответе не нашлось данных. Скопируй ответ Claude целиком.');
+  let data;
+  try {
+    data = JSON.parse(t.slice(a, b + 1));
+  } catch {
+    throw new Error('Не получилось прочитать ответ. Попроси Claude: «ответь только JSON» — и скопируй заново.');
+  }
+  const n = (v) => {
+    const x = parseFloat(String(v).replace(',', '.'));
+    return Number.isFinite(x) ? x : 0;
+  };
+  const items = (Array.isArray(data.items) ? data.items : [])
+    .map((i) => ({
+      name: String(i.name || 'Продукт').slice(0, 80),
+      grams: n(i.grams),
+      kcal_per_100g: n(i.kcal_per_100g),
+      protein_per_100g: n(i.protein_per_100g),
+      fat_per_100g: n(i.fat_per_100g),
+      carbs_per_100g: n(i.carbs_per_100g),
+    }))
+    .filter((i) => i.grams > 0);
+  if (!items.length && !data.note) throw new Error('В ответе нет продуктов.');
+  return { items, confidence: ['high', 'medium', 'low'].includes(data.confidence) ? data.confidence : 'medium', note: String(data.note || '') };
+}

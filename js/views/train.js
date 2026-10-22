@@ -1,9 +1,10 @@
 import { getState, update, dateKey, uid, addDays, parseKey } from '../store.js';
-import { h, sheet, toast, fmt, numInput, num } from '../ui.js';
+import { h, sheet, toast, fmt, numInput, num, beep, unlockAudio } from '../ui.js';
 import { SPORTS, INTENSITY, activityKcal, currentWeight } from '../calc.js';
 import { EX, PROGRAMS, WARMUP, PREGAME, DAY_NAMES, WEEK_ORDER, nextProgramDay, suggestion, unitLabel, repRange, fmtKg, EQUIPMENT } from '../workouts.js';
 import { openAddActivity, removeActivity } from '../actions.js';
 import { placeStrength } from './onboarding.js';
+import { renderHoopsCard } from './hoops.js';
 
 export function renderTrain(root) {
   const s = getState();
@@ -22,6 +23,8 @@ export function renderTrain(root) {
       !todayW?.finished && h('button', { class: 'btn primary block', onclick: () => startWorkout() }, todayW ? '▶ Продолжить' : '▶ Начать тренировку'),
       todayW?.finished && h('button', { class: 'btn ghost block', onclick: () => openWorkoutScreen(key) }, 'Посмотреть результат'),
     ),
+
+    renderHoopsCard(),
 
     h('div', { class: 'card' },
       h('div', { class: 'card-head' }, h('h3', null, 'Неделя'), h('button', { class: 'link', onclick: () => {
@@ -72,7 +75,7 @@ function history(s) {
       h('div', { class: 'row-main' }, h('b', null, '🏋️ Силовая ' + w.day), h('small', null, `Объём ${fmt(volume(w))} кг · ${w.exercises.reduce((t, e) => t + e.sets.filter((x) => x.done).length, 0)} подходов`)),
       h('span', { class: 'chev' }, '›'))));
     acts.filter((a) => !a.fromWorkout).forEach((a) => out.push(h('div', { class: 'row' },
-      h('div', { class: 'row-main' }, h('b', null, `${SPORTS[a.type].icon} ${SPORTS[a.type].name}`), h('small', null, `${a.minutes} мин · ${INTENSITY[a.intensity].toLowerCase()} · ${fmt(a.kcal)} ккал`)),
+      h('div', { class: 'row-main' }, h('b', null, `${SPORTS[a.type].icon} ${SPORTS[a.type].name}${a.hoops ? ' · соло' : ''}`), h('small', null, `${a.minutes} мин · ${INTENSITY[a.intensity].toLowerCase()} · ${fmt(a.kcal)} ккал`)),
       h('button', { class: 'icon-btn', onclick: () => confirm('Удалить запись?') && removeActivity(k, a.id) }, '✕'))));
   }
   return out.length ? out : h('p', { class: 'muted' }, 'Пока пусто. Записывай игры и силовые — тут появится история.');
@@ -127,24 +130,7 @@ export function startWorkout() {
 }
 
 let restTimer = null;
-let audioCtx = null;
 let wakeLock = null;
-
-function beep() {
-  try {
-    if (!audioCtx) return;
-    [0, 0.25, 0.5].forEach((t) => {
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.frequency.value = 880;
-      g.gain.setValueAtTime(0.25, audioCtx.currentTime + t);
-      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + t + 0.2);
-      o.connect(g).connect(audioCtx.destination);
-      o.start(audioCtx.currentTime + t);
-      o.stop(audioCtx.currentTime + t + 0.2);
-    });
-  } catch {}
-}
 
 export function openWorkoutScreen(key) {
   const s = getState();
@@ -206,11 +192,7 @@ export function openWorkoutScreen(key) {
         const kg = ex.w ? numInput({ value: st.kg ?? '', placeholder: '—', disabled: readonly, onchange: (ev) => patch((wk) => (wk.exercises[ei].sets[si].kg = num(ev.target.value))) }) : h('span');
         const reps = numInput({ value: st.reps ?? '', inputmode: 'numeric', disabled: readonly, onchange: (ev) => patch((wk) => (wk.exercises[ei].sets[si].reps = num(ev.target.value))) });
         const btn = h('button', { class: 'check' + (st.done ? ' on' : ''), disabled: readonly, onclick: () => {
-          if (!audioCtx) {
-            try {
-              audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            } catch {}
-          }
+          unlockAudio();
           const was = getState().workouts[key][0].exercises[ei].sets[si].done;
           patch((wk) => {
             const x = wk.exercises[ei].sets[si];

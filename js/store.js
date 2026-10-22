@@ -8,6 +8,7 @@ const DEFAULT = {
   customFoods: [], // [{id, name, kcal, p, f, c, portion?}]
   activities: {}, // {date: [{id, type, minutes, intensity, kcal}]}
   workouts: {}, // {date: [{id, day, exercises: [{id, sets: [{reps, kg, done}]}], finished}]}
+  hoops: {}, // {date: [{id, session, steps: [{id, round, made, att, sets, done}], finished}]}
   water: {}, // {date: ml}
   schedule: { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 0: [] }, // день недели -> виды спорта
   programPos: 0, // какая тренировка программы следующая

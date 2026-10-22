@@ -6,6 +6,7 @@ import { nextProgramDay, DAY_NAMES, PREGAME } from '../workouts.js';
 import { quoteOfDay } from '../motivation.js';
 import { SPORT_TIPS } from '../foods.js';
 import { startWorkout } from './train.js';
+import { startHoops } from './hoops.js';
 
 export function renderToday(root) {
   const s = getState();
@@ -57,7 +58,8 @@ export function renderToday(root) {
         const done = acts.some((a) => a.type === sp);
         return h('div', { class: 'plan-item' + (done ? ' done' : '') },
           h('span', { class: 'plan-icon' }, SPORTS[sp].icon),
-          h('div', { class: 'row-main' }, h('b', null, SPORTS[sp].name), h('small', null, done ? 'Записано ✓' : 'Перед игрой — разминка 8 мин')),
+          h('div', { class: 'row-main' }, h('b', null, SPORTS[sp].name), h('small', null, done ? 'Записано ✓' : sp === 'basketball' ? 'Игра или соло с мячом' : 'Перед игрой — разминка 8 мин')),
+          !done && sp === 'basketball' && h('button', { class: 'btn small ghost', onclick: () => startHoops('handles') }, 'Соло'),
           !done && h('button', { class: 'btn small primary', onclick: () => openAddActivity(key, sp) }, 'Записать'),
         );
       }),
