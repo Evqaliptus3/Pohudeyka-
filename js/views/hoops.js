@@ -1,6 +1,6 @@
 // Соло-тренировки баскетбола: карточка на вкладке «Спорт» и экран тренировки
 import { getState, update, dateKey, uid } from '../store.js';
-import { h, toast, fmt, beep, unlockAudio } from '../ui.js';
+import { h, toast, fmt, beep, unlockAudio, mount } from '../ui.js';
 import { activityKcal, currentWeight } from '../calc.js';
 import { DRILLS, SESSIONS, sessionSteps, shootingStats } from '../hoops.js';
 
@@ -94,7 +94,7 @@ export function openHoopsScreen(key, id) {
       const st = find(getState()).steps[si];
       const pct = st.att ? Math.round((st.made / st.att) * 100) : 0;
       body.innerHTML = '';
-      body.append(
+      mount(body, 
         h('div', { class: 'shot-count' },
           h('b', null, `${st.made}/${st.att}`),
           h('span', null, st.att ? `${pct}%` : `цель: ${d.att} бросков`),
@@ -162,7 +162,7 @@ export function openHoopsScreen(key, id) {
         tick();
         timer = setInterval(tick, 250);
       } }, st.sets >= sets ? '↻ Ещё раз' : '▶ Старт');
-      body.append(
+      mount(body, 
         h('div', { class: 'time-row' }, display, h('span', { class: 'muted' }, `подход ${Math.min(st.sets + 1, sets)} из ${sets}`), startBtn),
         !st.done && h('button', { class: 'link', onclick: () => {
           setDone(true);
@@ -174,7 +174,7 @@ export function openHoopsScreen(key, id) {
     if (d.kind === 'shots') renderShots();
     else renderTime();
 
-    card.append(
+    mount(card, 
       h('div', { class: 'card-head' }, h('h3', null, `${si + 1}. ${d.name}`), step.round && h('span', { class: 'pill gym' }, `круг ${step.round}`)),
       h('small', { class: 'muted' }, d.kind === 'shots' ? `${d.att} бросков` : `${d.sec} с${d.sets ? ` × ${d.sets}` : ''}`),
       h('details', null, h('summary', null, 'Как делать'), h('p', null, d.tip)),

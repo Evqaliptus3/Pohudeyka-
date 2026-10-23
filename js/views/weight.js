@@ -1,5 +1,5 @@
 import { getState, update, dateKey, parseKey, addDays } from '../store.js';
-import { h, bar, fmt1, segmented } from '../ui.js';
+import { h, bar, fmt1, segmented, mount } from '../ui.js';
 import { weightStats } from '../calc.js';
 import { openAddWeight } from '../actions.js';
 
@@ -11,7 +11,7 @@ export function renderWeight(root, rerender) {
   const p = s.profile;
   const waists = s.weights.filter((w) => w.waist);
 
-  root.append(
+  mount(root, 
     h('header', { class: 'page-head' }, h('h1', null, 'Вес')),
     h('div', { class: 'card' },
       h('div', { class: 'weight-top' },

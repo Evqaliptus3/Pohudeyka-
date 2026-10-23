@@ -1,5 +1,5 @@
 import { getState, dateKey, update } from '../store.js';
-import { h, ring, bar, fmt, fmt1 } from '../ui.js';
+import { h, ring, bar, fmt, fmt1, mount } from '../ui.js';
 import { targets, dayTotals, SPORTS, weightStats, foodStreak, weekActiveDays, INTENSITY } from '../calc.js';
 import { openAddFood, openAddWeight, openAddActivity, removeActivity, openMealIdeas, openPhotoFood } from '../actions.js';
 import { nextProgramDay, DAY_NAMES, PREGAME } from '../workouts.js';
@@ -28,7 +28,7 @@ export function renderToday(root) {
   const hello = now.getHours() < 12 ? 'Доброе утро' : now.getHours() < 18 ? 'Добрый день' : 'Добрый вечер';
   const dateStr = now.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  root.append(
+  mount(root, 
     h('header', { class: 'page-head' }, h('small', null, dateStr), h('h1', null, hello + ' 👋')),
 
     // Калории

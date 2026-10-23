@@ -1,6 +1,6 @@
 // Шторки для добавления данных: еда, вес, активность
 import { getState, update, uid, dateKey } from './store.js';
-import { h, sheet, toast, fmt, fmt1, num, numInput, segmented, field } from './ui.js';
+import { h, sheet, toast, fmt, fmt1, num, numInput, segmented, field, mount } from './ui.js';
 import { SPORTS, INTENSITY, activityKcal, currentWeight } from './calc.js';
 import { searchFoods, searchOnline, portion, MEALS, mealItems, mealTotals } from './foods.js';
 import { getApiKey, setApiKey, prepareImage, analyzeFood, CHAT_PROMPT, parseChatAnswer } from './photo.js';
@@ -64,13 +64,13 @@ export function openAddFood(key = dateKey(), meal = defaultMeal()) {
       const q = search.value.trim();
       if (!q) {
         const rec = recentFoods(state);
-        if (rec.length) list.append(h('div', { class: 'list-title' }, 'Недавние'), ...rec.map(row));
-        list.append(h('div', { class: 'list-title' }, 'Все продукты'));
+        if (rec.length) mount(list, h('div', { class: 'list-title' }, 'Недавние'), ...rec.map(row));
+        mount(list, h('div', { class: 'list-title' }, 'Все продукты'));
       }
       const res = searchFoods(q, state.customFoods);
-      list.append(...res.slice(0, q ? 60 : 40).map(row));
-      if (onlineResults.length) list.append(h('div', { class: 'list-title' }, 'Open Food Facts'), ...onlineResults.map(row));
-      if (q && !res.length && !onlineResults.length) list.append(h('p', { class: 'muted center' }, 'Ничего не нашлось. Поищи в интернете или добавь свой продукт.'));
+      mount(list, ...res.slice(0, q ? 60 : 40).map(row));
+      if (onlineResults.length) mount(list, h('div', { class: 'list-title' }, 'Open Food Facts'), ...onlineResults.map(row));
+      if (q && !res.length && !onlineResults.length) mount(list, h('p', { class: 'muted center' }, 'Ничего не нашлось. Поищи в интернете или добавь свой продукт.'));
     };
     search.addEventListener('input', () => {
       onlineResults = [];
@@ -119,7 +119,7 @@ function openPortion(food, key, meal, closeParent) {
       const g = num(grams.value) || 0;
       const p = portion(food, g);
       preview.innerHTML = '';
-      preview.append(h('b', null, `${fmt(p.kcal)} ккал`), h('span', null, `Б ${fmt1(p.p)} · Ж ${fmt1(p.f)} · У ${fmt1(p.c)}`));
+      mount(preview, h('b', null, `${fmt(p.kcal)} ккал`), h('span', null, `Б ${fmt1(p.p)} · Ж ${fmt1(p.f)} · У ${fmt1(p.c)}`));
     };
     grams.addEventListener('input', upd);
     upd();
@@ -215,7 +215,7 @@ export function openMealIdeas(key = dateKey(), meal = defaultMeal(), closeParent
       MEALS.filter((m) => tag === 'Все' || m.tag === tag).forEach((m) => {
         const t = mealTotals(m);
         const fits = remaining == null || t.kcal <= remaining + 50;
-        list.append(
+        mount(list, 
           h(
             'div',
             { class: 'meal-card' + (fits ? '' : ' dim') },
@@ -314,12 +314,12 @@ export function openAddActivity(key = dateKey(), type = 'basketball') {
     const upd = () => {
       const kc = activityKcal(cur, intensity, num(minutes.value) || 0, currentWeight(state));
       preview.innerHTML = '';
-      preview.append(h('b', null, `≈ ${fmt(kc)} ккал`), h('span', null, `к норме еды добавится ${fmt((kc * (state.profile.eatBack ?? 60)) / 100)} ккал`));
+      mount(preview, h('b', null, `≈ ${fmt(kc)} ккал`), h('span', null, `к норме еды добавится ${fmt((kc * (state.profile.eatBack ?? 60)) / 100)} ккал`));
     };
     minutes.addEventListener('input', upd);
     const typeChips = h('div', { class: 'chips' });
     Object.entries(SPORTS).forEach(([id, s]) => {
-      typeChips.append(h('button', { class: 'chip' + (id === cur ? ' on' : ''), onclick: (e) => {
+      mount(typeChips, h('button', { class: 'chip' + (id === cur ? ' on' : ''), onclick: (e) => {
         cur = id;
         typeChips.querySelectorAll('.chip').forEach((c) => c.classList.remove('on'));
         e.currentTarget.classList.add('on');
@@ -440,7 +440,7 @@ function openViaChat(key, meal, closeParent) {
           });
         } catch (e) {
           result.innerHTML = '';
-          result.append(h('p', { class: 'tip over-tip' }, '⚠️ ' + e.message));
+          mount(result, h('p', { class: 'tip over-tip' }, '⚠️ ' + e.message));
         }
       } }, 'Разобрать ответ'),
       result,
@@ -460,19 +460,19 @@ function photoSheet(file, key, meal, closeParent) {
       .then((img) => {
         image = img;
         preview.innerHTML = '';
-        preview.append(h('img', { src: img.dataUrl, alt: 'Фото еды' }));
+        mount(preview, h('img', { src: img.dataUrl, alt: 'Фото еды' }));
         go.disabled = false;
       })
       .catch((e) => {
         preview.innerHTML = '';
-        preview.append(h('p', { class: 'over' }, e.message));
+        mount(preview, h('p', { class: 'over' }, e.message));
       });
 
     async function run() {
       go.disabled = true;
       go.textContent = 'Смотрю на тарелку… (10–30 сек)';
       result.innerHTML = '';
-      result.append(h('div', { class: 'loader' }));
+      mount(result, h('div', { class: 'loader' }));
       try {
         const data = await analyzeFood(image.base64, comment.value.trim());
         renderPhotoResult(result, data, key, meal, () => {
@@ -482,7 +482,7 @@ function photoSheet(file, key, meal, closeParent) {
         go.textContent = '🔄 Распознать заново';
       } catch (e) {
         result.innerHTML = '';
-        result.append(h('p', { class: 'tip over-tip' }, '⚠️ ' + e.message));
+        mount(result, h('p', { class: 'tip over-tip' }, '⚠️ ' + e.message));
         go.textContent = '✨ Попробовать ещё раз';
       }
       go.disabled = false;
@@ -500,7 +500,7 @@ function renderPhotoResult(result, data, key, meal, onDone) {
 
   result.innerHTML = '';
   if (!items.length) {
-    result.append(h('p', { class: 'tip' }, data.note || 'Еды на фото не нашлось.'));
+    mount(result, h('p', { class: 'tip' }, data.note || 'Еды на фото не нашлось.'));
     return;
   }
   const conf = { high: ['уверенно', 'ok'], medium: ['примерно', ''], low: ['очень примерно', 'over'] }[data.confidence] || ['', ''];
@@ -509,7 +509,7 @@ function renderPhotoResult(result, data, key, meal, onDone) {
   const updTotal = () => {
     const t = items.filter((i) => i.on).map(calc).reduce((a, p) => ({ kcal: a.kcal + p.kcal, p: a.p + p.p, f: a.f + p.f, c: a.c + p.c }), { kcal: 0, p: 0, f: 0, c: 0 });
     totalBox.innerHTML = '';
-    totalBox.append(h('b', null, `${fmt(t.kcal)} ккал`), h('span', null, `Б ${fmt1(t.p)} · Ж ${fmt1(t.f)} · У ${fmt1(t.c)}`));
+    mount(totalBox, h('b', null, `${fmt(t.kcal)} ккал`), h('span', null, `Б ${fmt1(t.p)} · Ж ${fmt1(t.f)} · У ${fmt1(t.c)}`));
     const n = items.filter((i) => i.on).length;
     addBtn.textContent = n ? `Добавить в «${MEAL_NAMES[curMeal]}» (${n})` : 'Ничего не выбрано';
     addBtn.disabled = !n;
@@ -545,7 +545,7 @@ function renderPhotoResult(result, data, key, meal, onDone) {
     toast(`📷 + ${fmt(kcal)} ккал · ${MEAL_NAMES[curMeal]}`);
     onDone();
   };
-  result.append(
+  mount(result, 
     h('div', { class: 'card-head', style: { marginTop: '18px' } }, h('h3', null, 'На тарелке'), h('small', { class: conf[1] }, conf[0])),
     h('p', { class: 'muted small' }, 'Поправь граммы, если знаешь точнее. Галочкой можно убрать лишнее.'),
     ...rows,

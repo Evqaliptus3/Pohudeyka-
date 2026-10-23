@@ -16,6 +16,13 @@ export function h(tag, props, ...children) {
   return el;
 }
 
+// Добавляет детей с раскрытием массивов и пропуском пустых значений (null, false).
+// Используй вместо el.append(...), когда среди детей могут быть массивы или условия.
+export function mount(el, ...children) {
+  append(el, children);
+  return el;
+}
+
 function append(el, children) {
   for (const c of children.flat(Infinity)) {
     if (c == null || c === false) continue;

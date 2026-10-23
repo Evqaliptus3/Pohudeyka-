@@ -1,5 +1,5 @@
 import { getState, dateKey, addDays, parseKey } from '../store.js';
-import { h, bar, fmt, fmt1 } from '../ui.js';
+import { h, bar, fmt, fmt1, mount } from '../ui.js';
 import { targets, dayTotals } from '../calc.js';
 import { openAddFood, openEditFoodItem, openMealIdeas, openPhotoFood, MEAL_NAMES } from '../actions.js';
 import { SPORT_TIPS } from '../foods.js';
@@ -22,7 +22,7 @@ export function renderFood(root, rerender) {
     rerender();
   };
 
-  root.append(
+  mount(root, 
     h('header', { class: 'page-head' }, h('h1', null, 'Питание')),
     h('div', { class: 'day-nav' },
       h('button', { class: 'icon-btn', onclick: () => go(-1) }, '‹'),

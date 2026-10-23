@@ -1,6 +1,6 @@
 // Онбординг: данные о себе, цель, спорт по дням недели
 import { update, dateKey } from '../store.js';
-import { h, numInput, num, segmented, field, toast } from '../ui.js';
+import { h, numInput, num, segmented, field, toast, mount } from '../ui.js';
 import { LIFESTYLE, PACES, SPORTS } from '../calc.js';
 import { EQUIPMENT, DAY_NAMES, WEEK_ORDER, autoStrengthDays } from '../workouts.js';
 
@@ -25,7 +25,7 @@ export function profileForm(initial, schedule, onSave, { submitLabel = 'Поех
   const renderSched = () => {
     schedGrid.innerHTML = '';
     WEEK_ORDER.forEach((d) => {
-      schedGrid.append(
+      mount(schedGrid, 
         h('div', { class: 'sched-row' }, h('b', null, DAY_NAMES[d]), h('div', { class: 'chips' }, GAME_SPORTS.map((s) => h('button', { type: 'button', class: 'chip' + (sched[d].includes(s) ? ' on' : ''), onclick: () => {
           sched[d] = sched[d].includes(s) ? sched[d].filter((x) => x !== s) : [...sched[d], s];
           renderSched();
@@ -87,7 +87,7 @@ export function placeStrength(sched, n) {
 }
 
 export function renderOnboarding(root) {
-  root.append(
+  mount(root, 
     h('div', { class: 'onboard' },
       h('div', { class: 'hero' }, h('div', { class: 'hero-icon' }, '🔥'), h('h1', null, 'Похудейка'), h('p', null, 'Минус 15 кг, сильные мышцы и форма для баскета, футбола и падела. Всё хранится только на твоём телефоне.')),
       profileForm({}, null, (profile, sched) => {

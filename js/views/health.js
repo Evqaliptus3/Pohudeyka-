@@ -1,6 +1,6 @@
 // Экран связи с Apple Health: синхронизация, отправка и инструкция по настройке «Команд»
 import { getState, update, dateKey } from '../store.js';
-import { h, sheet, toast, fmt } from '../ui.js';
+import { h, sheet, toast, fmt, mount } from '../ui.js';
 import { parseHealthText, applyHealth, runShortcut, exportPayload, markExported, IMPORT_SHORTCUT, EXPORT_SHORTCUT } from '../health.js';
 
 export function healthSummary(s, key = dateKey()) {
@@ -23,7 +23,7 @@ export function openHealth() {
     const renderStats = () => {
       const sum = healthSummary(getState());
       statsBox.innerHTML = '';
-      statsBox.append(
+      mount(statsBox, 
         h('div', { class: 'stats-grid' },
           h('div', { class: 'stat' }, h('small', null, 'Шаги сегодня'), h('b', null, sum.steps != null ? fmt(sum.steps) : '—')),
           h('div', { class: 'stat' }, h('small', null, 'Активная энергия'), h('b', null, sum.active != null ? `${fmt(sum.active)} ккал` : '—')),
@@ -45,11 +45,11 @@ export function openHealth() {
         const nS = Object.keys(data.steps).length;
         const nA = Object.keys(data.active).length;
         result.innerHTML = '';
-        result.append(h('p', { class: 'tip' }, `✓ Вес: ${nW} дн. (новых ${added}) · шаги: ${nS} дн. · активная энергия: ${nA} дн.`));
+        mount(result, h('p', { class: 'tip' }, `✓ Вес: ${nW} дн. (новых ${added}) · шаги: ${nS} дн. · активная энергия: ${nA} дн.`));
         toast('Данные из Health загружены ✓');
       } catch (e) {
         result.innerHTML = '';
-        result.append(h('p', { class: 'tip over-tip' }, '⚠️ ' + e.message));
+        mount(result, h('p', { class: 'tip over-tip' }, '⚠️ ' + e.message));
       }
     };
 

@@ -1,5 +1,5 @@
 import { getState, subscribe, update } from './store.js';
-import { h, toast } from './ui.js';
+import { h, toast, mount } from './ui.js';
 import { checkAchievements, markUnlocked } from './motivation.js';
 import { renderOnboarding } from './views/onboarding.js';
 import { renderToday } from './views/today.js';
@@ -42,7 +42,7 @@ function render() {
   nav.querySelectorAll('a').forEach((a) => a.classList.toggle('on', a.dataset.tab === tab.id));
 }
 
-nav.append(...TABS.map((t) => h('a', { href: '#' + t.id, 'data-tab': t.id }, h('span', null, t.icon), h('small', null, t.name))));
+mount(nav, ...TABS.map((t) => h('a', { href: '#' + t.id, 'data-tab': t.id }, h('span', null, t.icon), h('small', null, t.name))));
 
 window.addEventListener('hashchange', render);
 subscribe(() => {

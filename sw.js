@@ -1,5 +1,5 @@
 // Офлайн-кэш. При изменении файлов увеличивай версию.
-const VERSION = 'v5';
+const VERSION = 'v6';
 const CACHE = 'pohudeyka-' + VERSION;
 const FILES = [
   './',

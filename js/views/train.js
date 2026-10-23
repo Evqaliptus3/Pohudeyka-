@@ -1,5 +1,5 @@
 import { getState, update, dateKey, uid, addDays, parseKey } from '../store.js';
-import { h, sheet, toast, fmt, numInput, num, beep, unlockAudio } from '../ui.js';
+import { h, sheet, toast, fmt, numInput, num, beep, unlockAudio, mount } from '../ui.js';
 import { SPORTS, INTENSITY, activityKcal, currentWeight } from '../calc.js';
 import { EX, PROGRAMS, WARMUP, PREGAME, DAY_NAMES, WEEK_ORDER, nextProgramDay, suggestion, unitLabel, repRange, fmtKg, EQUIPMENT } from '../workouts.js';
 import { openAddActivity, removeActivity } from '../actions.js';
@@ -13,7 +13,7 @@ export function renderTrain(root) {
   const next = nextProgramDay(s);
   const eq = EQUIPMENT.find((e) => e.id === (s.profile.equipment || 'gym'));
 
-  root.append(
+  mount(root, 
     h('header', { class: 'page-head' }, h('h1', null, 'Тренировки')),
 
     h('div', { class: 'card hero-card' },
@@ -92,7 +92,7 @@ function editDay(d) {
     const chips = h('div', { class: 'chips' });
     const render = () => {
       chips.innerHTML = '';
-      opts.forEach((o) => chips.append(h('button', { class: 'chip' + (cur.includes(o) ? ' on' : ''), onclick: () => {
+      opts.forEach((o) => mount(chips, h('button', { class: 'chip' + (cur.includes(o) ? ' on' : ''), onclick: () => {
         const i = cur.indexOf(o);
         i >= 0 ? cur.splice(i, 1) : cur.push(o);
         render();
@@ -155,12 +155,12 @@ export function openWorkoutScreen(key) {
         clearInterval(restTimer);
         beep();
         restBox.innerHTML = '';
-        restBox.append(h('b', null, 'Поехали! 💪'));
+        mount(restBox, h('b', null, 'Поехали! 💪'));
         setTimeout(() => restBox.classList.add('hidden'), 2500);
         return;
       }
       restBox.innerHTML = '';
-      restBox.append(
+      mount(restBox, 
         h('span', null, 'Отдых'),
         h('b', null, `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`),
         h('button', { class: 'btn ghost small', onclick: () => (extra += 30000) }, '+30 с'),
@@ -187,7 +187,7 @@ export function openWorkoutScreen(key) {
     const rows = h('div', { class: 'sets' });
     const renderRows = () => {
       rows.innerHTML = '';
-      rows.append(h('div', { class: 'set-row head' }, h('span', null, '#'), ex.w ? h('span', null, 'кг') : h('span', null, ''), h('span', null, unitLabel(ex)), h('span', null, '')));
+      mount(rows, h('div', { class: 'set-row head' }, h('span', null, '#'), ex.w ? h('span', null, 'кг') : h('span', null, ''), h('span', null, unitLabel(ex)), h('span', null, '')));
       getState().workouts[key][0].exercises[ei].sets.forEach((st, si) => {
         const kg = ex.w ? numInput({ value: st.kg ?? '', placeholder: '—', disabled: readonly, onchange: (ev) => patch((wk) => (wk.exercises[ei].sets[si].kg = num(ev.target.value))) }) : h('span');
         const reps = numInput({ value: st.reps ?? '', inputmode: 'numeric', disabled: readonly, onchange: (ev) => patch((wk) => (wk.exercises[ei].sets[si].reps = num(ev.target.value))) });
@@ -205,7 +205,7 @@ export function openWorkoutScreen(key) {
           if (!was) startRest(ex.unit === 'sec' || !ex.w ? 60 : ex.reps[1] <= 8 ? 150 : 90);
         } }, '✓');
         const row = h('div', { class: 'set-row' + (st.done ? ' done' : '') }, h('span', null, si + 1), kg, reps, btn);
-        rows.append(row);
+        mount(rows, row);
       });
     };
     renderRows();

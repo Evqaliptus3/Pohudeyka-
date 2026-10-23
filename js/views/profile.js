@@ -1,5 +1,5 @@
 import { getState, update, exportJSON, importJSON, resetAll, dateKey } from '../store.js';
-import { h, sheet, toast, segmented, fmt } from '../ui.js';
+import { h, sheet, toast, segmented, fmt, mount } from '../ui.js';
 import { targets, bmr, currentWeight, age } from '../calc.js';
 import { ACHIEVEMENTS } from '../motivation.js';
 import { profileForm, placeStrength } from './onboarding.js';
@@ -15,7 +15,7 @@ export function renderProfile(root) {
   const hM = p.height / 100;
   const bmi = currentWeight(s) / (hM * hM);
 
-  root.append(
+  mount(root, 
     h('header', { class: 'page-head' }, h('h1', null, 'Профиль')),
     h('div', { class: 'card' },
       h('div', { class: 'card-head' }, h('h3', null, `🏆 Достижения ${got}/${ACHIEVEMENTS.length}`)),
